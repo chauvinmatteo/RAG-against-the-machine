@@ -1,0 +1,15 @@
+[project]
+name = "rag-against-the-machine"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "chauvinmatteo", email = "229449054+chauvinmatteo@users.noreply.github.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "pydantic>=2.14.1",
+]
+
+[tool.uv]
+package = false
