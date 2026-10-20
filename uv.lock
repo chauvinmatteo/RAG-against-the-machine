@@ -1048,6 +1048,7 @@ dependencies = [
     { name = "mypy" },
     { name = "pydantic" },
     { name = "torch" },
+    { name = "tqdm" },
     { name = "transformers" },
 ]
 
@@ -1058,6 +1059,7 @@ requires-dist = [
     { name = "mypy", specifier = ">=2.4.0" },
     { name = "pydantic", specifier = ">=2.14.1" },
     { name = "torch", specifier = ">=2.14.1" },
+    { name = "tqdm", specifier = ">=4.70.1" },
     { name = "transformers", specifier = ">=5.19.0" },
 ]
 
