@@ -1,5 +1,5 @@
 import json
-
+import os
 from pydantic import ValidationError, BaseModel
 from src.models import RagDataset, StudentSearchResults
 
@@ -85,4 +85,15 @@ def load_search_results(path: str) -> StudentSearchResults:
 
 
 def save_model(model: BaseModel, directory: str, filename: str) -> None:
-    pass
+    """Write a Pydantic model as JSON into directory/filename.
+
+    Raises:
+        DataLoadError: If the directory or the file cannot be written.
+    """
+    path = os.path.join(directory, filename)
+    try:
+        os.makedirs(directory, exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(model.model_dump_json(indent=2))
+    except OSError as e:
+        raise DataLoadError(f"Cannot write '{path}': {e}")
