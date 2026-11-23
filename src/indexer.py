@@ -1,5 +1,19 @@
 import os
-from typing import List
+from typing import List, Optional, Tuple
+
+from pydantic import BaseModel
+
+
+class Chunk(BaseModel):
+    """A slice of a corpus file.
+
+    text == file_content[first_character_index:last_character_index]
+    """
+    file_path: str
+    first_character_index: int
+    last_character_index: int
+    text: str
+    headers: str = ""
 
 
 def extract_files(root: str) -> List[str]:
@@ -17,3 +31,98 @@ def extract_files(root: str) -> List[str]:
             if name.endswith((".py", ".md")):
                 files.append(os.path.join(dirpath, name))
     return sorted(files)
+
+
+def _parse_header(line: str) -> Optional[Tuple[int, str]]:
+    """Return (level, title) if the line is a markdown header, else None."""
+    stripped = line.rstrip("\n")
+    level = len(stripped) - len(stripped.lstrip("#"))
+    if 1 <= level <= 6 and stripped[level:level + 1] == " ":
+        return level, stripped[level:].strip()
+    return None
+
+
+def _is_fence(line: str) -> bool:
+    """Return True if the line opens or closes a code block."""
+    return line.lstrip().startswith(("```", "~~~"))
+
+
+def _split_sections(text: str) -> List[Tuple[int, int, str]]:
+    """Split markdown on headers, ignoring '#' lines inside code blocks.
+
+    Returns:
+        List of (start, end, header_path), end excluded.
+    """
+    sections: List[Tuple[int, int, str]] = []
+    stack: List[Tuple[int, str]] = []
+    in_code = False
+    sec_start, sec_path = 0, ""
+    pos = 0
+    for line in text.splitlines(keepends=True):
+        if _is_fence(line):
+            in_code = not in_code
+        header = None if in_code else _parse_header(line)
+        if header:
+            if pos > sec_start:
+                sections.append((sec_start, pos, sec_path))
+            level, title = header
+            while stack and stack[-1][0] >= level:
+                stack.pop()
+            stack.append((level, title))
+            sec_start = pos
+            sec_path = " > ".join(t for _, t in stack)
+        pos += len(line)
+    if pos > sec_start:
+        sections.append((sec_start, pos, sec_path))
+    return sections
+
+
+def _split_big(text: str, start: int, end: int,
+               max_size: int) -> List[Tuple[int, int]]:
+    """Split [start, end) into ranges of at most max_size characters.
+
+    Cuts on a blank line if possible, then on a newline, then anywhere.
+    """
+    ranges: List[Tuple[int, int]] = []
+    while end - start > max_size:
+        cut = start + max_size
+        for sep in ("\n\n", "\n"):
+            idx = text.rfind(sep, start, start + max_size)
+            if idx > start:
+                cut = idx + len(sep)
+                break
+        ranges.append((start, cut))
+        start = cut
+    ranges.append((start, end))
+    return ranges
+
+
+def chunk_markdown(file_path: str, text: str, max_size: int = 2000,
+                   min_size: int = 200) -> List[Chunk]:
+    """Split a markdown file into chunks of at most max_size characters.
+
+    Args:
+        file_path: Path of the file, stored as is in each chunk.
+        text: Full content of the file.
+        max_size: Maximum number of characters per chunk.
+        min_size: Sections smaller than this are merged into the previous
+            chunk when the result still fits in max_size.
+
+    Returns:
+        The chunks, in file order.
+    """
+    chunks: List[Chunk] = []
+    for s, e, path in _split_sections(text):
+        for cs, ce in _split_big(text, s, e, max_size):
+            if (chunks and ce - cs < min_size
+                    and ce - chunks[-1].first_character_index <= max_size):
+                prev = chunks[-1]
+                prev.last_character_index = ce
+                prev.text = text[prev.first_character_index:ce]
+                continue
+            if text[cs:ce].strip():
+                chunks.append(Chunk(file_path=file_path,
+                                    first_character_index=cs,
+                                    last_character_index=ce,
+                                    text=text[cs:ce], headers=path))
+    return chunks
