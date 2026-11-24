@@ -16,6 +16,11 @@ class Chunk(BaseModel):
     headers: str = ""
 
 
+class ChunkIndex(BaseModel):
+    max_chunk_size: int
+    chunks: List[Chunk]
+
+
 def extract_files(root: str) -> List[str]:
     """Recursively collect the indexable files under a directory.
 

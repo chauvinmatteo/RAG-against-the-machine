@@ -96,4 +96,4 @@ def save_model(model: BaseModel, directory: str, filename: str) -> None:
         with open(path, "w", encoding="utf-8") as f:
             f.write(model.model_dump_json(indent=2))
     except OSError as e:
-        raise DataLoadError(f"Cannot write '{path}': {e}")
+        raise DataLoadError(f"Cannot write '{path}': {e}") from e
