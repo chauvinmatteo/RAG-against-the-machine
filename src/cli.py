@@ -44,17 +44,17 @@ class RagCLI():
         print(f"Ingestion complete! {len(all_chunks)} chunks saved under "
               f"{PROCESSED_DIR}/")
 
-    def search(self):
+    def search(self) -> None:
         pass
 
-    def search_dataset(self):
+    def search_dataset(self) -> None:
         pass
 
-    def answer(self):
+    def answer(self) -> None:
         pass
 
-    def answer_dataset(self):
+    def answer_dataset(self) -> None:
         pass
 
-    def evaluate(self):
+    def evaluate(self) -> None:
         pass

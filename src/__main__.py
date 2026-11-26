@@ -2,7 +2,7 @@ from src.cli import RagCLI
 from fire import Fire
 
 
-def main():
+def main() -> None:
 
     Fire(RagCLI)
 

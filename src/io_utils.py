@@ -12,7 +12,7 @@ class JSONLoadError(DataLoadError):
     """Raised when a data file does not contain valid JSON."""
 
 
-def _read_text(path: str) -> str:
+def read_text(path: str) -> str:
     """Read a UTF-8 text file and return its content.
 
     Args:
@@ -44,7 +44,7 @@ def load_dataset(path: str) -> RagDataset:
         JSONLoadError: If the file does not contain valid JSON.
         DataLoadError: If the file cannot be read or is not a valid dataset.
     """
-    text = _read_text(path)
+    text = read_text(path)
     try:
         data = json.loads(text)
     except json.JSONDecodeError as e:
@@ -71,7 +71,7 @@ def load_search_results(path: str) -> StudentSearchResults:
         DataLoadError: If the file cannot be read or does not contain
             valid search results.
     """
-    text = _read_text(path)
+    text = read_text(path)
     try:
         data = json.loads(text)
     except json.JSONDecodeError as e:
